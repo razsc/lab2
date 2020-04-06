@@ -1,0 +1,22 @@
+--cpu Cortex-M3
+"lab2ro\startup_stm32f103xb.o"
+"lab2ro\main.o"
+"lab2ro\stm32f1xx_it.o"
+"lab2ro\stm32f1xx_hal_msp.o"
+"lab2ro\stm32f1xx_hal_gpio_ex.o"
+"lab2ro\stm32f1xx_hal_tim.o"
+"lab2ro\stm32f1xx_hal_tim_ex.o"
+"lab2ro\stm32f1xx_hal.o"
+"lab2ro\stm32f1xx_hal_rcc.o"
+"lab2ro\stm32f1xx_hal_rcc_ex.o"
+"lab2ro\stm32f1xx_hal_gpio.o"
+"lab2ro\stm32f1xx_hal_dma.o"
+"lab2ro\stm32f1xx_hal_cortex.o"
+"lab2ro\stm32f1xx_hal_pwr.o"
+"lab2ro\stm32f1xx_hal_flash.o"
+"lab2ro\stm32f1xx_hal_flash_ex.o"
+"lab2ro\system_stm32f1xx.o"
+--library_type=microlib --strict --scatter "lab2ro\lab2ro.sct"
+--summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list "lab2ro.map" -o lab2ro\lab2ro.axf
