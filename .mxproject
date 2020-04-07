@@ -1,7 +1,7 @@
 [PreviousGenFiles]
-HeaderPath=C:/Users/Raz/Desktop/labs/lab2ro/Inc
+HeaderPath=C:/Users/Raz/Desktop/labs/lab2ro/lab2/Inc
 HeaderFiles=stm32f1xx_it.h;stm32f1xx_hal_conf.h;main.h;
-SourcePath=C:/Users/Raz/Desktop/labs/lab2ro/Src
+SourcePath=C:/Users/Raz/Desktop/labs/lab2ro/lab2/Src
 SourceFiles=stm32f1xx_it.c;stm32f1xx_hal_msp.c;main.c;
 
 [PreviousLibFiles]

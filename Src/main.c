@@ -40,12 +40,10 @@
 #include "main.h"
 #include "stm32f1xx_hal.h"
 
-
 /* USER CODE BEGIN Includes */
 #include <stdint.h>
 #define GPIOA_IDR 0x40010808
 #define GPIOB_ODR 0x40010C0C
-#define mask 0x255
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -65,16 +63,23 @@ uint8_t dll_to_phy_tx_bus_valid = 0; // checks if theres data allready transferd
 uint8_t phy_tx_busy = 0; // checks if there is data being transmited at the moment.
 
 int delay =0;
-
+static uint8_t pr_clock_val=0;
+static uint8_t p_clock_val = 0; 
 static uint8_t Rx_value = 0;
 static uint8_t Tx_value = 0;
 static uint8_t Rx_clock_value ;
 static uint8_t Tx_clock_value ;
 static uint16_t t_data =0;
 static uint32_t c_clock=0;
+int ft_flag=1;
+static uint32_t prv_clock=0;
+int ft2_flag=1;
 uint8_t data=0;
 uint8_t interface_tx_flag=0;
 uint8_t interface_rx_flag=0;
+static uint32_t *GPIOA_IDR_Pointer = (uint32_t*)GPIOA_IDR;
+static uint32_t *GPIOB_ODR_Pointer = (uint32_t*)GPIOB_ODR;
+static uint16_t odr_temp=0;
 
 uint8_t senders[] = {201,0,192,0,223};
 /* USER CODE END PV */
@@ -95,8 +100,7 @@ static void MX_NVIC_Init(void);
 void phy_Tx()
 {
 	static uint16_t shifter =1; // for the masking in order to iso the bit
-	static uint8_t transfer = 0; // var to the masked bit
-	static uint8_t p_clock_val = 0; // saves the prev clock value in order to check that we are in rising edge
+	static uint8_t transfer = 0; // var to the masked bit // saves the prev clock value in order to check that we are in rising edge
 	static uint8_t temp=0;	// takes the data from the bus
 	if(interface_tx_flag){  // checkes if we are in a new byte
 		HAL_GPIO_WritePin(phy_tx_busy_GPIO_Port, phy_tx_busy_Pin, GPIO_PIN_SET); //set phy busy to 1
@@ -125,8 +129,8 @@ void phy_Tx()
 		}
 		else if ( shifter > 128) // after the last bit
 		{
-			HAL_TIM_Base_Stop(&htim3); //turn off timer
-			HAL_TIM_Base_Stop_IT(&htim3); //turn off interupts
+		  HAL_TIM_Base_Stop(&htim3);
+			HAL_TIM_Base_Stop_IT(&htim3);
 			HAL_GPIO_WritePin(phy_tx_clock_GPIO_Port, phy_tx_clock_Pin ,GPIO_PIN_RESET); //set clock to zero
 			phy_tx_busy =0; // reset busy
 			shifter =1; // reset the masker 
@@ -151,8 +155,7 @@ void phy_Tx()
 void phy_Rx()
 {
 	
-	static uint16_t s_counter =0; // counter for inserting the number 
-	static uint8_t pr_clock_val=0; // prev clock
+	static uint16_t s_counter =0; // counter for inserting the number  // prev clock
 	Rx_clock_value = HAL_GPIO_ReadPin(phy_rx_clock_GPIO_Port, phy_rx_clock_Pin); // reads the current clock value
 	if ( (!Rx_clock_value) && pr_clock_val) // checks that we are in falling edge
 	{
@@ -168,11 +171,49 @@ void phy_Rx()
 }
 
 
+
 void interface()
 {
-	static int ft_flag=1;
-	static uint8_t prv_clock=0;
-	static int ft2_flag=1;
+	if (ft_flag)
+	{
+		HAL_TIM_Base_Start(&htim2);
+		HAL_TIM_Base_Start_IT(&htim2);
+		ft_flag=0;
+		prv_clock=0;
+	}
+	c_clock=HAL_GPIO_ReadPin(interface_clock_GPIO_Port, interface_clock_Pin);
+	dll_to_phy_tx_bus_valid=HAL_GPIO_ReadPin(dll_to_phy_tx_bus_valid_GPIO_Port, dll_to_phy_tx_bus_valid_Pin);
+	if(!c_clock&&prv_clock&&dll_to_phy_tx_bus_valid)
+	{
+		dll_to_phy_tx_bus=(*GPIOA_IDR_Pointer & 255);
+		interface_tx_flag=1;
+	}
+	else if ((c_clock)&&(!prv_clock))
+		{
+			if (ft2_flag)
+			{
+				HAL_GPIO_WritePin(phy_alive_GPIO_Port, phy_alive_Pin,1);
+				ft2_flag=0;
+			}
+			phy_to_dll_rx_bus_valid=HAL_GPIO_ReadPin(phy_to_dll_rx_bus_valid_GPIO_Port, phy_to_dll_rx_bus_valid_Pin);
+			if (phy_to_dll_rx_bus_valid)
+			{
+				HAL_GPIO_WritePin(phy_to_dll_rx_bus_valid_GPIO_Port, phy_to_dll_rx_bus_valid_Pin,0);
+			}
+			if (interface_rx_flag)
+			{
+				phy_to_dll_rx_bus = (phy_to_dll_rx_bus<<8) + (*GPIOB_ODR_Pointer & 255);
+				*GPIOB_ODR_Pointer = phy_to_dll_rx_bus;
+				HAL_GPIO_WritePin(phy_to_dll_rx_bus_valid_GPIO_Port,phy_to_dll_rx_bus_valid_Pin,GPIO_PIN_SET);
+				interface_rx_flag=0;
+			}
+		}
+	prv_clock=c_clock;
+	
+}
+
+/*void interface()
+{
 	static uint32_t *GPIOA_IDR_Pointer = (uint32_t*)GPIOA_IDR;
 	static uint32_t *GPIOB_ODR_Pointer = (uint32_t*)GPIOB_ODR;
 	static uint16_t odr_temp=0;
@@ -182,11 +223,11 @@ void interface()
 	HAL_TIM_Base_Start_IT(&htim2);
 	ft_flag=0;
 	}
-	c_clock=HAL_GPIO_ReadPin(interface_clock_GPIO_Port, interface_clock_Pin);
-	if (c_clock&&!prv_clock && ft2_flag)
+	c_clock=HAL_GPIO_ReadPin(interface_clock_GPIO_Port, interface_clock_Pin);	
+	if ((c_clock)&&(!prv_clock) && (ft2_flag))
 	{
-		HAL_GPIO_WritePin(phy_alive_GPIO_Port, phy_alive_Pin,GPIO_PIN_SET);
-		ft2_flag=0;
+	  ft2_flag=0;
+		HAL_GPIO_WritePin(phy_alive_GPIO_Port,phy_alive_Pin,GPIO_PIN_SET);
 	}
 	dll_to_phy_tx_bus_valid = HAL_GPIO_ReadPin(dll_to_phy_tx_bus_valid_GPIO_Port, dll_to_phy_tx_bus_valid_Pin);
 	if(!c_clock&&prv_clock&&dll_to_phy_tx_bus_valid)
@@ -196,6 +237,7 @@ void interface()
 	}
 	else if (c_clock&&!prv_clock) 
 	{
+		
 		*GPIOB_ODR_Pointer=dll_to_phy_tx_bus;
 		phy_to_dll_rx_bus_valid=HAL_GPIO_ReadPin(phy_to_dll_rx_bus_valid_GPIO_Port,phy_to_dll_rx_bus_valid_Pin);
 		if (phy_to_dll_rx_bus_valid)
@@ -205,14 +247,14 @@ void interface()
 		if (interface_rx_flag)
 		{
 			odr_temp=(*GPIOB_ODR_Pointer & mask);
-			phy_to_dll_rx_bus = ((phy_to_dll_rx_bus<<3)+ (odr_temp));
+			phy_to_dll_rx_bus = (phy_to_dll_rx_bus<<3) + (odr_temp);
 			*GPIOB_ODR_Pointer = phy_to_dll_rx_bus;
 			HAL_GPIO_WritePin(phy_to_dll_rx_bus_valid_GPIO_Port,phy_to_dll_rx_bus_valid_Pin,GPIO_PIN_SET);
 			interface_rx_flag=0;
 		}
 	}
 	prv_clock=c_clock;
-}
+}*/
 
 void phy_layer()
 {
@@ -221,7 +263,18 @@ void phy_layer()
 	
 }
 
- 
+void sampleClocks()
+{
+	p_clock_val=Tx_clock_value;
+	pr_clock_val=Rx_clock_value;
+	prv_clock=c_clock;
+	Tx_clock_value=HAL_GPIO_ReadPin(phy_tx_clock_GPIO_Port, phy_tx_clock_Pin);
+	Rx_clock_value=HAL_GPIO_ReadPin(phy_rx_clock_GPIO_Port, phy_rx_clock_Pin);
+	c_clock=HAL_GPIO_ReadPin(interface_clock_GPIO_Port, interface_clock_Pin);
+	dll_to_phy_tx_bus_valid=HAL_GPIO_ReadPin(dll_to_phy_tx_bus_valid_GPIO_Port, dll_to_phy_tx_bus_valid_Pin);
+}
+
+
 /* USER CODE END 0 */
 
 /**
@@ -261,12 +314,13 @@ int main(void)
   /* USER CODE BEGIN 2 */
 	HAL_GPIO_WritePin(phy_tx_clock_GPIO_Port, phy_tx_clock_Pin ,GPIO_PIN_RESET); //set clock to zero
  
- /* USER CODE END 2 */
+  /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+		sampleClocks();
 		phy_layer();	
 		interface();
 
