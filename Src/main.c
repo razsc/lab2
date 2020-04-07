@@ -132,7 +132,7 @@ void phy_Tx()
 		  HAL_TIM_Base_Stop(&htim3);
 			HAL_TIM_Base_Stop_IT(&htim3);
 			HAL_GPIO_WritePin(phy_tx_clock_GPIO_Port, phy_tx_clock_Pin ,GPIO_PIN_RESET); //set clock to zero
-			phy_tx_busy =0; // reset busy
+		HAL_GPIO_WritePin(phy_tx_busy_GPIO_Port, phy_tx_busy_Pin, GPIO_PIN_RESET); //set phy busy to 1
 			shifter =1; // reset the masker 
 		}
 		else
@@ -171,9 +171,9 @@ void phy_Rx()
 }
 
 
-
 void interface()
 {
+	uint32_t efi =0; // just kidding efi num 1 also oren
 	if (ft_flag)
 	{
 		HAL_TIM_Base_Start(&htim2);
@@ -202,9 +202,11 @@ void interface()
 			}
 			if (interface_rx_flag)
 			{
-				phy_to_dll_rx_bus = (phy_to_dll_rx_bus<<8) + (*GPIOB_ODR_Pointer & 255);
-				*GPIOB_ODR_Pointer = phy_to_dll_rx_bus;
+				efi = (phy_to_dll_rx_bus<<8) + (*GPIOB_ODR_Pointer & 255);
+				*GPIOB_ODR_Pointer = efi;
 				HAL_GPIO_WritePin(phy_to_dll_rx_bus_valid_GPIO_Port,phy_to_dll_rx_bus_valid_Pin,GPIO_PIN_SET);
+				phy_to_dll_rx_bus_valid =1;
+				phy_to_dll_rx_bus=0;
 				interface_rx_flag=0;
 			}
 		}
@@ -320,7 +322,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		sampleClocks();
+		//sampleClocks();
 		phy_layer();	
 		interface();
 
