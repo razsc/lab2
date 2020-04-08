@@ -154,7 +154,34 @@ void phy_Tx()
 	p_clock_val = Tx_clock_value; // current clock into previos clock
 }
 
+
 void phy_Rx()
+{
+	static uint32_t tempi = 0;
+	static uint32_t tempi2 = 0;
+	static uint32_t s_counter =1; // counter for inserting the number  // prev clock
+	Rx_clock_value = HAL_GPIO_ReadPin(phy_rx_clock_GPIO_Port, phy_rx_clock_Pin); // reads the current clock value
+	if ( (!Rx_clock_value) && pr_clock_val) // checks that we are in falling edge
+	{
+		Rx_value = HAL_GPIO_ReadPin (phy_rx_data_GPIO_Port, phy_rx_data_Pin); // reads the data from the pin
+		tempi = Rx_value * s_counter;
+		tempi2 += tempi;
+		s_counter = s_counter*2;
+	}
+	if (s_counter > 128)
+	{
+		s_counter =1;
+		phy_to_dll_rx_bus = tempi2;
+		interface_rx_flag =1;
+		tempi2=0;
+	}
+	pr_clock_val = Rx_clock_value;
+	
+}
+	
+
+
+/*void phy_Rx()
 {
 	static uint32_t tempi = 0;
 	static uint32_t tempi2 = 0;
@@ -172,7 +199,7 @@ void phy_Rx()
 		s_counter = 1;
 		interface_rx_flag=1;
 	}
-}
+}*/
 
 
 void interface()
@@ -210,7 +237,7 @@ void interface()
 				*GPIOB_ODR_Pointer = efi;
 				HAL_GPIO_WritePin(phy_to_dll_rx_bus_valid_GPIO_Port,phy_to_dll_rx_bus_valid_Pin,GPIO_PIN_SET);
 				phy_to_dll_rx_bus_valid =1;
-				phy_to_dll_rx_bus=0;
+				//phy_to_dll_rx_bus=0;
 				interface_rx_flag=0;
 			}
 		}
