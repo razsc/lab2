@@ -52,11 +52,11 @@ TIM_HandleTypeDef htim3;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-uint16_t phy_to_dll_rx_bus = 0; // saves the data recived from the phy to phy and moves it to the dll_rx
+uint32_t phy_to_dll_rx_bus = 0; // saves the data recived from the phy to phy and moves it to the dll_rx
 
 uint8_t phy_to_dll_rx_bus_valid = 0; // checks if there is data to be transferd to the dll_rx from the phy layer
 
-uint8_t dll_to_phy_tx_bus = 0; // saves the original data we want to transfer to the phy layer from the dll tx.
+uint32_t dll_to_phy_tx_bus = 0; // saves the original data we want to transfer to the phy layer from the dll tx.
 
 uint8_t dll_to_phy_tx_bus_valid = 0; // checks if theres data allready transferd from the dll to the [hy layer
 
@@ -65,8 +65,8 @@ uint8_t phy_tx_busy = 0; // checks if there is data being transmited at the mome
 int delay =0;
 static uint8_t pr_clock_val=0;
 static uint8_t p_clock_val = 0; 
-static uint8_t Rx_value = 0;
-static uint8_t Tx_value = 0;
+static uint32_t Rx_value = 0;
+static uint32_t Tx_value = 0;
 static uint8_t Rx_clock_value ;
 static uint8_t Tx_clock_value ;
 static uint16_t t_data =0;
@@ -80,6 +80,8 @@ uint8_t interface_rx_flag=0;
 static uint32_t *GPIOA_IDR_Pointer = (uint32_t*)GPIOA_IDR;
 static uint32_t *GPIOB_ODR_Pointer = (uint32_t*)GPIOB_ODR;
 static uint16_t odr_temp=0;
+static uint32_t tempi = 0;
+static uint32_t tempi2 = 0;
 
 uint8_t senders[] = {201,0,192,0,223};
 /* USER CODE END PV */
@@ -132,7 +134,7 @@ void phy_Tx()
 		  HAL_TIM_Base_Stop(&htim3);
 			HAL_TIM_Base_Stop_IT(&htim3);
 			HAL_GPIO_WritePin(phy_tx_clock_GPIO_Port, phy_tx_clock_Pin ,GPIO_PIN_RESET); //set clock to zero
-		HAL_GPIO_WritePin(phy_tx_busy_GPIO_Port, phy_tx_busy_Pin, GPIO_PIN_RESET); //set phy busy to 1
+			HAL_GPIO_WritePin(phy_tx_busy_GPIO_Port, phy_tx_busy_Pin, GPIO_PIN_RESET); //set phy busy to 1
 			shifter =1; // reset the masker 
 		}
 		else
@@ -154,18 +156,20 @@ void phy_Tx()
 
 void phy_Rx()
 {
-	
-	static uint16_t s_counter =0; // counter for inserting the number  // prev clock
+	static uint32_t tempi = 0;
+	static uint32_t tempi2 = 0;
+	static uint32_t s_counter =1; // counter for inserting the number  // prev clock
 	Rx_clock_value = HAL_GPIO_ReadPin(phy_rx_clock_GPIO_Port, phy_rx_clock_Pin); // reads the current clock value
 	if ( (!Rx_clock_value) && pr_clock_val) // checks that we are in falling edge
 	{
 		Rx_value = HAL_GPIO_ReadPin (phy_rx_data_GPIO_Port, phy_rx_data_Pin); // reads the data from the pin
-		phy_to_dll_rx_bus += Rx_value << s_counter;	// moves the bit for the correct spot and inserts in to the bus
-		s_counter ++;
+		tempi2 = Rx_value * s_counter;
+		phy_to_dll_rx_bus += tempi2;// moves the bit for the correct spot and inserts in to the bus
+		s_counter *=2;
 	}
 	pr_clock_val = Rx_clock_value;
-	if (s_counter == 8){
-		s_counter = 0;
+	if (s_counter > 128){
+		s_counter = 1;
 		interface_rx_flag=1;
 	}
 }
@@ -192,13 +196,13 @@ void interface()
 		{
 			if (ft2_flag)
 			{
-				HAL_GPIO_WritePin(phy_alive_GPIO_Port, phy_alive_Pin,1);
+				HAL_GPIO_WritePin(phy_alive_GPIO_Port, phy_alive_Pin,GPIO_PIN_SET);
 				ft2_flag=0;
 			}
 			phy_to_dll_rx_bus_valid=HAL_GPIO_ReadPin(phy_to_dll_rx_bus_valid_GPIO_Port, phy_to_dll_rx_bus_valid_Pin);
 			if (phy_to_dll_rx_bus_valid)
 			{
-				HAL_GPIO_WritePin(phy_to_dll_rx_bus_valid_GPIO_Port, phy_to_dll_rx_bus_valid_Pin,0);
+				HAL_GPIO_WritePin(phy_to_dll_rx_bus_valid_GPIO_Port, phy_to_dll_rx_bus_valid_Pin,GPIO_PIN_RESET);
 			}
 			if (interface_rx_flag)
 			{
