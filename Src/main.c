@@ -104,18 +104,15 @@ void phy_Tx()
 	static uint16_t shifter =1; // for the masking in order to iso the bit
 	static uint8_t transfer = 0; // var to the masked bit // saves the prev clock value in order to check that we are in rising edge
 	static uint8_t temp=0;	// takes the data from the bus
+	Tx_clock_value = HAL_GPIO_ReadPin(phy_tx_clock_GPIO_Port, phy_tx_clock_Pin); // reads the current value of the clcok
 	if(interface_tx_flag){  // checkes if we are in a new byte
 		HAL_GPIO_WritePin(phy_tx_busy_GPIO_Port, phy_tx_busy_Pin, GPIO_PIN_SET); //set phy busy to 1
 		HAL_TIM_Base_Start(&htim3); //turn on timer
 		HAL_TIM_Base_Start_IT(&htim3);
 		interface_tx_flag=0;
 	}
-	Tx_clock_value = HAL_GPIO_ReadPin(phy_tx_clock_GPIO_Port, phy_tx_clock_Pin); // reads the current value of the clcok
-	if (Tx_clock_value && (!p_clock_val)) // checks if we are in a rising edge 
+	else if (Tx_clock_value && (!p_clock_val) && shifter <= 256) // checks if we are in a rising edge 
 	{
-		if (shifter ==1) // first bit
-		{
-	
 			transfer = ((dll_to_phy_tx_bus) &	(shifter));
 			if (transfer == shifter)
 			{
@@ -128,28 +125,14 @@ void phy_Tx()
 				Tx_value =0;
 			}
 			shifter = shifter*2;		
-		}
-		else if ( shifter > 128) // after the last bit
-		{
-		  HAL_TIM_Base_Stop(&htim3);
-			HAL_TIM_Base_Stop_IT(&htim3);
-			HAL_GPIO_WritePin(phy_tx_clock_GPIO_Port, phy_tx_clock_Pin ,GPIO_PIN_RESET); //set clock to zero
-			HAL_GPIO_WritePin(phy_tx_busy_GPIO_Port, phy_tx_busy_Pin, GPIO_PIN_RESET); //set phy busy to 1
-			shifter =1; // reset the masker 
-		}
-		else
-		{	
-			transfer = ((dll_to_phy_tx_bus) &	(shifter)); // for the reset of the bits
-			if (transfer == shifter){
-				HAL_GPIO_WritePin (phy_tx_data_GPIO_Port, phy_tx_data_Pin, GPIO_PIN_SET);	
-				Tx_value =1;
-			}	
-			else{
-				HAL_GPIO_WritePin (phy_tx_data_GPIO_Port, phy_tx_data_Pin, GPIO_PIN_RESET);					
-				Tx_value =0;
-			}
-			shifter = shifter*2;		
-		}
+	}
+	else if ( shifter > 256) // after the last bit
+	{
+		HAL_TIM_Base_Stop(&htim3);
+		HAL_TIM_Base_Stop_IT(&htim3);
+		HAL_GPIO_WritePin(phy_tx_clock_GPIO_Port, phy_tx_clock_Pin ,GPIO_PIN_RESET); //set clock to zero
+		HAL_GPIO_WritePin(phy_tx_busy_GPIO_Port, phy_tx_busy_Pin, GPIO_PIN_RESET); //set phy busy to 1
+		shifter =1; // reset the masker 
 	}
 	p_clock_val = Tx_clock_value; // current clock into previos clock
 }
@@ -168,7 +151,7 @@ void phy_Rx()
 		tempi2 += tempi;
 		s_counter = s_counter*2;
 	}
-	if (s_counter > 128)
+	if (s_counter > 256)
 	{
 		s_counter =1;
 		phy_to_dll_rx_bus = tempi2;
@@ -300,11 +283,11 @@ void sampleClocks()
 {
 	p_clock_val=Tx_clock_value;
 	pr_clock_val=Rx_clock_value;
-	prv_clock=c_clock;
+	//prv_clock=c_clock;
 	Tx_clock_value=HAL_GPIO_ReadPin(phy_tx_clock_GPIO_Port, phy_tx_clock_Pin);
 	Rx_clock_value=HAL_GPIO_ReadPin(phy_rx_clock_GPIO_Port, phy_rx_clock_Pin);
-	c_clock=HAL_GPIO_ReadPin(interface_clock_GPIO_Port, interface_clock_Pin);
-	dll_to_phy_tx_bus_valid=HAL_GPIO_ReadPin(dll_to_phy_tx_bus_valid_GPIO_Port, dll_to_phy_tx_bus_valid_Pin);
+	//c_clock=HAL_GPIO_ReadPin(interface_clock_GPIO_Port, interface_clock_Pin);
+	//dll_to_phy_tx_bus_valid=HAL_GPIO_ReadPin(dll_to_phy_tx_bus_valid_GPIO_Port, dll_to_phy_tx_bus_valid_Pin);
 }
 
 

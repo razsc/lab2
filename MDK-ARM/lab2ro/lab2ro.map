@@ -53,10 +53,10 @@ Section Cross References
     main.o(i.main) refers to main.o(i.interface) for interface
     main.o(i.phy_Rx) refers to stm32f1xx_hal_gpio.o(i.HAL_GPIO_ReadPin) for HAL_GPIO_ReadPin
     main.o(i.phy_Rx) refers to main.o(.data) for .data
+    main.o(i.phy_Tx) refers to stm32f1xx_hal_gpio.o(i.HAL_GPIO_ReadPin) for HAL_GPIO_ReadPin
     main.o(i.phy_Tx) refers to stm32f1xx_hal_gpio.o(i.HAL_GPIO_WritePin) for HAL_GPIO_WritePin
     main.o(i.phy_Tx) refers to stm32f1xx_hal_tim.o(i.HAL_TIM_Base_Start) for HAL_TIM_Base_Start
     main.o(i.phy_Tx) refers to stm32f1xx_hal_tim.o(i.HAL_TIM_Base_Start_IT) for HAL_TIM_Base_Start_IT
-    main.o(i.phy_Tx) refers to stm32f1xx_hal_gpio.o(i.HAL_GPIO_ReadPin) for HAL_GPIO_ReadPin
     main.o(i.phy_Tx) refers to stm32f1xx_hal_tim.o(i.HAL_TIM_Base_Stop) for HAL_TIM_Base_Stop
     main.o(i.phy_Tx) refers to stm32f1xx_hal_tim.o(i.HAL_TIM_Base_Stop_IT) for HAL_TIM_Base_Stop_IT
     main.o(i.phy_Tx) refers to main.o(.data) for .data
@@ -343,7 +343,7 @@ Removing Unused input sections from the image.
     Removing main.o(.revsh_text), (4 bytes).
     Removing main.o(.rrx_text), (6 bytes).
     Removing main.o(i._Error_Handler), (2 bytes).
-    Removing main.o(i.sampleClocks), (80 bytes).
+    Removing main.o(i.sampleClocks), (48 bytes).
     Removing main.o(.data), (1 bytes).
     Removing main.o(.data), (4 bytes).
     Removing main.o(.data), (1 bytes).
@@ -622,7 +622,7 @@ Removing Unused input sections from the image.
     Removing system_stm32f1xx.o(i.SystemCoreClockUpdate), (104 bytes).
     Removing system_stm32f1xx.o(.constdata), (8 bytes).
 
-283 unused section(s) (total 16273 bytes) removed from the image.
+283 unused section(s) (total 16241 bytes) removed from the image.
 
 ==============================================================================
 
@@ -768,8 +768,8 @@ Image Symbol Table
     i.main                                   0x080011a0   Section        0  main.o(i.main)
     i.phy_Rx                                 0x080011f0   Section        0  main.o(i.phy_Rx)
     i.phy_Tx                                 0x08001248   Section        0  main.o(i.phy_Tx)
-    i.phy_layer                              0x0800130c   Section        0  main.o(i.phy_layer)
-    .constdata                               0x0800131a   Section       16  system_stm32f1xx.o(.constdata)
+    i.phy_layer                              0x08001308   Section        0  main.o(i.phy_layer)
+    .constdata                               0x08001316   Section       16  system_stm32f1xx.o(.constdata)
     .data                                    0x20000000   Section       64  main.o(.data)
     pr_clock_val                             0x20000002   Data           1  main.o(.data)
     p_clock_val                              0x20000003   Data           1  main.o(.data)
@@ -913,12 +913,12 @@ Image Symbol Table
     __scatterload_zeroinit                   0x080010e9   Thumb Code    14  handlers.o(i.__scatterload_zeroinit)
     interface                                0x080010f9   Thumb Code   154  main.o(i.interface)
     main                                     0x080011a1   Thumb Code    74  main.o(i.main)
-    phy_Rx                                   0x080011f1   Thumb Code    74  main.o(i.phy_Rx)
-    phy_Tx                                   0x08001249   Thumb Code   180  main.o(i.phy_Tx)
-    phy_layer                                0x0800130d   Thumb Code    14  main.o(i.phy_layer)
-    AHBPrescTable                            0x0800131a   Data          16  system_stm32f1xx.o(.constdata)
-    Region$$Table$$Base                      0x0800132c   Number         0  anon$$obj.o(Region$$Table)
-    Region$$Table$$Limit                     0x0800134c   Number         0  anon$$obj.o(Region$$Table)
+    phy_Rx                                   0x080011f1   Thumb Code    76  main.o(i.phy_Rx)
+    phy_Tx                                   0x08001249   Thumb Code   174  main.o(i.phy_Tx)
+    phy_layer                                0x08001309   Thumb Code    14  main.o(i.phy_layer)
+    AHBPrescTable                            0x08001316   Data          16  system_stm32f1xx.o(.constdata)
+    Region$$Table$$Base                      0x08001328   Number         0  anon$$obj.o(Region$$Table)
+    Region$$Table$$Limit                     0x08001348   Number         0  anon$$obj.o(Region$$Table)
     phy_to_dll_rx_bus_valid                  0x20000000   Data           1  main.o(.data)
     dll_to_phy_tx_bus_valid                  0x20000001   Data           1  main.o(.data)
     interface_tx_flag                        0x20000004   Data           1  main.o(.data)
@@ -943,9 +943,9 @@ Memory Map of the image
 
   Image Entry point : 0x080000ed
 
-  Load Region LR_IROM1 (Base: 0x08000000, Size: 0x0000139c, Max: 0x00010000, ABSOLUTE)
+  Load Region LR_IROM1 (Base: 0x08000000, Size: 0x00001398, Max: 0x00010000, ABSOLUTE)
 
-    Execution Region ER_IROM1 (Exec base: 0x08000000, Load base: 0x08000000, Size: 0x0000134c, Max: 0x00010000, ABSOLUTE)
+    Execution Region ER_IROM1 (Exec base: 0x08000000, Load base: 0x08000000, Size: 0x00001348, Max: 0x00010000, ABSOLUTE)
 
     Exec Addr    Load Addr    Size         Type   Attr      Idx    E Section Name        Object
 
@@ -1027,20 +1027,20 @@ Memory Map of the image
     0x080010f8   0x080010f8   0x000000a8   Code   RO           18    i.interface         main.o
     0x080011a0   0x080011a0   0x00000050   Code   RO           19    i.main              main.o
     0x080011f0   0x080011f0   0x00000058   Code   RO           20    i.phy_Rx            main.o
-    0x08001248   0x08001248   0x000000c4   Code   RO           21    i.phy_Tx            main.o
-    0x0800130c   0x0800130c   0x0000000e   Code   RO           22    i.phy_layer         main.o
-    0x0800131a   0x0800131a   0x00000010   Data   RO         2094    .constdata          system_stm32f1xx.o
-    0x0800132a   0x0800132a   0x00000002   PAD
-    0x0800132c   0x0800132c   0x00000020   Data   RO         2148    Region$$Table       anon$$obj.o
+    0x08001248   0x08001248   0x000000c0   Code   RO           21    i.phy_Tx            main.o
+    0x08001308   0x08001308   0x0000000e   Code   RO           22    i.phy_layer         main.o
+    0x08001316   0x08001316   0x00000010   Data   RO         2094    .constdata          system_stm32f1xx.o
+    0x08001326   0x08001326   0x00000002   PAD
+    0x08001328   0x08001328   0x00000020   Data   RO         2148    Region$$Table       anon$$obj.o
 
 
-    Execution Region RW_IRAM1 (Exec base: 0x20000000, Load base: 0x0800134c, Size: 0x000004d0, Max: 0x00005000, ABSOLUTE)
+    Execution Region RW_IRAM1 (Exec base: 0x20000000, Load base: 0x08001348, Size: 0x000004d0, Max: 0x00005000, ABSOLUTE)
 
     Exec Addr    Load Addr    Size         Type   Attr      Idx    E Section Name        Object
 
-    0x20000000   0x0800134c   0x00000040   Data   RW           25    .data               main.o
-    0x20000040   0x0800138c   0x0000000c   Data   RW         1227    .data               stm32f1xx_hal.o
-    0x2000004c   0x08001398   0x00000004   Data   RW         2096    .data               system_stm32f1xx.o
+    0x20000000   0x08001348   0x00000040   Data   RW           25    .data               main.o
+    0x20000040   0x08001388   0x0000000c   Data   RW         1227    .data               stm32f1xx_hal.o
+    0x2000004c   0x08001394   0x00000004   Data   RW         2096    .data               system_stm32f1xx.o
     0x20000050        -       0x00000080   Zero   RW           24    .bss                main.o
     0x200000d0        -       0x00000400   Zero   RW            1    STACK               startup_stm32f103xb.o
 
@@ -1052,20 +1052,20 @@ Image component sizes
 
       Code (inc. data)   RO Data    RW Data    ZI Data      Debug   Object Name
 
-      1004         82          0         64        128     430159   main.o
-        36          8        236          0       1024        788   startup_stm32f103xb.o
-       128         24          0         12          0       3157   stm32f1xx_hal.o
-       228         14          0          0          0      27265   stm32f1xx_hal_cortex.o
-       472         36          0          0          0       4012   stm32f1xx_hal_gpio.o
-       204         18          0          0          0       1485   stm32f1xx_hal_msp.o
-      1232         80          0          0          0       4450   stm32f1xx_hal_rcc.o
-      1014         14          0          0          0      11419   stm32f1xx_hal_tim.o
-        84          0          0          0          0       2270   stm32f1xx_hal_tim_ex.o
-        90         18          0          0          0       4610   stm32f1xx_it.o
-        72         16         16          4          0       1115   system_stm32f1xx.o
+      1000         82          0         64        128     431327   main.o
+        36          8        236          0       1024        820   startup_stm32f103xb.o
+       128         24          0         12          0       3493   stm32f1xx_hal.o
+       228         14          0          0          0      27781   stm32f1xx_hal_cortex.o
+       472         36          0          0          0       4300   stm32f1xx_hal_gpio.o
+       204         18          0          0          0       1657   stm32f1xx_hal_msp.o
+      1232         80          0          0          0       4734   stm32f1xx_hal_rcc.o
+      1014         14          0          0          0      12455   stm32f1xx_hal_tim.o
+        84          0          0          0          0       2502   stm32f1xx_hal_tim_ex.o
+        90         18          0          0          0       5246   stm32f1xx_it.o
+        72         16         16          4          0       1291   system_stm32f1xx.o
 
     ----------------------------------------------------------------------
-      4566        310        286         80       1152     490730   Object Totals
+      4562        310        286         80       1152     495606   Object Totals
          0          0         32          0          0          0   (incl. Generated)
          2          0          2          0          0          0   (incl. Padding)
 
@@ -1104,15 +1104,15 @@ Image component sizes
 
       Code (inc. data)   RO Data    RW Data    ZI Data      Debug   
 
-      4654        326        286         80       1152     487986   Grand Totals
-      4654        326        286         80       1152     487986   ELF Image Totals
-      4654        326        286         80          0          0   ROM Totals
+      4650        326        286         80       1152     492862   Grand Totals
+      4650        326        286         80       1152     492862   ELF Image Totals
+      4650        326        286         80          0          0   ROM Totals
 
 ==============================================================================
 
-    Total RO  Size (Code + RO Data)                 4940 (   4.82kB)
+    Total RO  Size (Code + RO Data)                 4936 (   4.82kB)
     Total RW  Size (RW Data + ZI Data)              1232 (   1.20kB)
-    Total ROM Size (Code + RO Data + RW Data)       5020 (   4.90kB)
+    Total ROM Size (Code + RO Data + RW Data)       5016 (   4.90kB)
 
 ==============================================================================
 
